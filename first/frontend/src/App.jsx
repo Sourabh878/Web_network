@@ -1,21 +1,35 @@
 import React, { useState } from "react";
 import axios from "axios";
+// import { Bar } from "react-chartjs-2";
+// import { Chart as ChartJS, BarElement, CategoryScale, LinearScale } from "chart.js";
+
+// ChartJS.register(BarElement, CategoryScale, LinearScale);
+
 
 function App() {
   const [domain, setDomain] = useState("");
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
+  const [headers, setHeaders] = useState(null);
+
+  
+
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [ipinfo, whois, ping, ssl, dns, ports] = await Promise.all([
+      const [ipinfo, whois, ping, ssl, dns, ports,headersRes,malware,performance] = await Promise.all([
         axios.get(`http://localhost:5000/api/ipinfo?domain=${domain}`),
         axios.get(`http://localhost:5000/api/whois?domain=${domain}`),
         axios.get(`http://localhost:5000/api/ping?domain=${domain}`),
         axios.get(`http://localhost:5000/api/ssl?domain=${domain}`),
         axios.get(`http://localhost:5000/api/dns?domain=${domain}`),
-        axios.get(`http://localhost:5000/api/ports?domain=${domain}`)
+        axios.get(`http://localhost:5000/api/ports?domain=${domain}`),
+        axios.get(`http://localhost:5000/api/security-headers?domain=${domain}`),
+        axios.get(`http://localhost:5000/api/malware?domain=${domain}`),
+        // axios.get(`http://localhost:5000/api/performance?domain=${domain}`),
+        // axios.get(`http://localhost:5000/api/techstack?domain=${domain}`)
+        
       ]);
       setResults({
         ipinfo: ipinfo.data,
@@ -23,8 +37,12 @@ function App() {
         ping: ping.data,
         ssl: ssl.data,
         dns: dns.data.records,
-        ports: ports.data
+        ports: ports.data,
+        malware: malware.data,
+        // performance: performance.data,
+        // techstack: techstack.data.technologies
       });
+      setHeaders(headersRes.data.headers);
     } catch (err) {
       console.error("Error fetching info", err);
     } finally {
@@ -108,6 +126,80 @@ function App() {
             </ul>
           </div>
         )}
+
+        {headers && (
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <h2 className="text-xl font-semibold mb-2">HTTP Security Headers</h2>
+            <ul className="text-sm">
+              {Object.entries(headers).map(([key, value]) => (
+                <li key={key}>
+                  <strong>{key}:</strong>{" "}
+                  {value ? <span className="text-green-700">{value}</span> : <span className="text-red-600">Not Set</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* {results.techstack && (
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <h2 className="text-xl font-semibold">Technology Stack</h2>
+            <ul className="text-sm list-disc pl-5">
+              {results.techstack.map((tech, i) => (
+                <li key={i}>
+                  <strong>{tech.name}</strong> – {tech.categories.map(c => c.name).join(', ')}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )} */}
+
+
+        {results.malware && (
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <h2 className="text-xl font-semibold">Malware Detection</h2>
+            <p><b>Status:</b> {results.malware.status}</p>
+            {results.malware.status === "Malware Detected" ? (
+              <ul className="text-sm">
+                {Object.entries(results.malware.details).map(([scanner, result], index) => (
+                  <li key={index}>
+                    <strong>{scanner}:</strong> {result.category || result.result}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No malware detected.</p>
+            )}
+          </div>
+        )}
+
+{/* {results.performance && (
+  <div className="mt-6 bg-white p-4 rounded shadow">
+    <h2 className="text-xl font-semibold mb-2">Website Performance</h2>
+    <Bar
+      data={{
+        labels: ["Load Time (ms)", "Page Size (KB)"],
+        datasets: [
+          {
+            label: "Performance Metrics",
+            data: [results.performance.loadTime, results.performance.pageSizeKB],
+            backgroundColor: ["#3b82f6", "#10b981"]
+          }
+        ]
+      }}
+      options={{
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }}
+    />
+    <p className="mt-2 text-sm">Status Code: {results.performance.statusCode}</p>
+  </div>
+)} */}
+
+
       </div>
     </div>
   );
