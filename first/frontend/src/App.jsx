@@ -18,7 +18,7 @@ function App() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [ipinfo, whois, ping, ssl, dns, ports,headersRes,malware,performance] = await Promise.all([
+      const [ipinfo, whois, ping, ssl, dns, ports,headersRes,malware] = await Promise.all([
         axios.get(`http://localhost:5000/api/ipinfo?domain=${domain}`),
         axios.get(`http://localhost:5000/api/whois?domain=${domain}`),
         axios.get(`http://localhost:5000/api/ping?domain=${domain}`),
