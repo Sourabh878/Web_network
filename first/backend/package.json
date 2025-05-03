@@ -7,7 +7,7 @@
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
     "ping": "^0.4.4",
-    "puppeteer": "^24.7.2",
+    "puppeteer": "^24.8.0",
     "react-chartjs-2": "^5.3.0",
     "wappalyzer": "^7.0.3",
     "whois": "^2.14.2"

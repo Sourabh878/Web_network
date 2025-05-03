@@ -8,6 +8,7 @@ const net = require("net");
 const http = require("http");
 const https = require("https");
 const { URL } = require("url");
+const puppeteer = require("puppeteer");
 
 // const { performance } = require("perf_hooks");
 // const fetch = require("node-fetch");
@@ -215,6 +216,47 @@ app.get("/api/malware", async (req, res) => {
 //   }
 // });
 
+
+
+app.get("/api/cookies", async (req, res) => {
+  const url = "https://"+req.query.url;
+  console.log("url: ", url);
+  
+  if (!url) return res.status(400).json({ error: "URL is required" });
+
+  try {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 15000 });
+
+    const cookies = await page.cookies();
+
+    const classifyCookie = (cookie) => {
+      if (cookie.name.toLowerCase().includes("session")) return "Session Cookie";
+      if (cookie.name.toLowerCase().includes("auth")) return "Authentication Cookie";
+      if (cookie.name.toLowerCase().includes("track") || cookie.domain.includes("google") || cookie.name.startsWith("_ga")) return "Tracking Cookie";
+      return "Other";
+    };
+
+    const detailedCookies = cookies.map(c => ({
+      name: c.name,
+      domain: c.domain,
+      secure: c.secure,
+      httpOnly: c.httpOnly,
+      sameSite: c.sameSite,
+      expires: c.expires,
+      type: classifyCookie(c),
+    }));
+
+    await browser.close();
+    console.log("cookies: ", detailedCookies);
+    
+    res.json({ cookies: detailedCookies });
+  } catch (err) {
+    console.error("Cookie fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch cookies" });
+  }
+});
 
 
 

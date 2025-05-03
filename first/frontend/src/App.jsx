@@ -5,20 +5,16 @@ import axios from "axios";
 
 // ChartJS.register(BarElement, CategoryScale, LinearScale);
 
-
 function App() {
   const [domain, setDomain] = useState("");
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [headers, setHeaders] = useState(null);
 
-  
-
-
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [ipinfo, whois, ping, ssl, dns, ports,headersRes,malware] = await Promise.all([
+      const [ipinfo, whois, ping, ssl, dns, ports, headersRes, malware, cookies] = await Promise.all([
         axios.get(`http://localhost:5000/api/ipinfo?domain=${domain}`),
         axios.get(`http://localhost:5000/api/whois?domain=${domain}`),
         axios.get(`http://localhost:5000/api/ping?domain=${domain}`),
@@ -27,10 +23,11 @@ function App() {
         axios.get(`http://localhost:5000/api/ports?domain=${domain}`),
         axios.get(`http://localhost:5000/api/security-headers?domain=${domain}`),
         axios.get(`http://localhost:5000/api/malware?domain=${domain}`),
+        axios.get(`http://localhost:5000/api/cookies?url=${domain}`),  // Added the cookies API call
         // axios.get(`http://localhost:5000/api/performance?domain=${domain}`),
         // axios.get(`http://localhost:5000/api/techstack?domain=${domain}`)
-        
       ]);
+
       setResults({
         ipinfo: ipinfo.data,
         whois: whois.data.whois,
@@ -39,6 +36,7 @@ function App() {
         dns: dns.data.records,
         ports: ports.data,
         malware: malware.data,
+        cookies: cookies.data.cookies,  // Store cookies in results
         // performance: performance.data,
         // techstack: techstack.data.technologies
       });
@@ -141,20 +139,6 @@ function App() {
           </div>
         )}
 
-        {/* {results.techstack && (
-          <div className="mt-6 bg-white p-4 rounded shadow">
-            <h2 className="text-xl font-semibold">Technology Stack</h2>
-            <ul className="text-sm list-disc pl-5">
-              {results.techstack.map((tech, i) => (
-                <li key={i}>
-                  <strong>{tech.name}</strong> – {tech.categories.map(c => c.name).join(', ')}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )} */}
-
-
         {results.malware && (
           <div className="mt-6 bg-white p-4 rounded shadow">
             <h2 className="text-xl font-semibold">Malware Detection</h2>
@@ -173,32 +157,26 @@ function App() {
           </div>
         )}
 
-{/* {results.performance && (
-  <div className="mt-6 bg-white p-4 rounded shadow">
-    <h2 className="text-xl font-semibold mb-2">Website Performance</h2>
-    <Bar
-      data={{
-        labels: ["Load Time (ms)", "Page Size (KB)"],
-        datasets: [
-          {
-            label: "Performance Metrics",
-            data: [results.performance.loadTime, results.performance.pageSizeKB],
-            backgroundColor: ["#3b82f6", "#10b981"]
-          }
-        ]
-      }}
-      options={{
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }}
-    />
-    <p className="mt-2 text-sm">Status Code: {results.performance.statusCode}</p>
-  </div>
-)} */}
-
+        {/* Display Cookies */}
+        {results.cookies && (
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <h2 className="text-xl font-semibold">Cookies</h2>
+            <ul className="text-sm">
+              {results.cookies.map((cookie, index) => (
+                <li key={index}>
+                  <strong>{cookie.name}</strong> ({cookie.type})
+                  <ul>
+                    <li>Domain: {cookie.domain}</li>
+                    <li>Secure: {cookie.secure ? "Yes" : "No"}</li>
+                    <li>HTTPOnly: {cookie.httpOnly ? "Yes" : "No"}</li>
+                    <li>SameSite: {cookie.sameSite}</li>
+                    <li>Expires: {cookie.expires ? new Date(cookie.expires * 1000).toLocaleString() : "N/A"}</li>
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       </div>
     </div>
