@@ -9,20 +9,38 @@ import SecurityHeaders from "./SecurityHeaders";
 import MalwareInfo from "./MalwareInfo";
 import CookiesInfo from "./CookiesInfo";
 
-const ResultsSection = ({ results, loading, headers }) => {
+const ResultsSection = ({ results, loading, headers, onExplain }) => {
   return (
     <div>
       {loading && <p className="mt-4">Loading...</p>}
 
-      {results.ipinfo && <IPInfo ipinfo={results.ipinfo} />}
-      {results.whois && <WHOISInfo whois={results.whois} />}
-      {results.ping && <PingInfo ping={results.ping} />}
-      {results.ssl && <SSLInfo ssl={results.ssl} />}
-      {results.dns && <DNSRecords dns={results.dns} />}
-      {results.ports && <PortsInfo ports={results.ports} />}
-      {headers && <SecurityHeaders headers={headers} />}
-      {results.malware && <MalwareInfo malware={results.malware} />}
-      {results.cookies && <CookiesInfo cookies={results.cookies} />}
+      {results.ipinfo && (
+        <IPInfo ipinfo={results.ipinfo} onExplain={onExplain} />
+      )}
+      {results.whois && (
+        <WHOISInfo whois={results.whois} onExplain={onExplain} />
+      )}
+      {results.ping && (
+        <PingInfo ping={results.ping} onExplain={onExplain} />
+      )}
+      {results.ssl && (
+        <SSLInfo ssl={results.ssl} onExplain={onExplain} />
+      )}
+      {results.dns && (
+        <DNSRecords dns={results.dns} onExplain={onExplain} />
+      )}
+      {results.ports && (
+        <PortsInfo ports={results.ports} onExplain={onExplain} />
+      )}
+      {headers && (
+        <SecurityHeaders headers={headers} onExplain={onExplain} />
+      )}
+      {results.malware && (
+        <MalwareInfo malware={results.malware} onExplain={onExplain} />
+      )}
+      {results.cookies && (
+        <CookiesInfo cookies={results.cookies} onExplain={onExplain} />
+      )}
     </div>
   );
 };

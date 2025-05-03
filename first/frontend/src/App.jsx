@@ -1,13 +1,18 @@
-import React, { useState } from "react";
-import axios from "axios";
+import { useState } from "react";
 import DomainInput from "./components/DomainInput";
 import ResultsSection from "./components/ResultsSection";
+import Gemini from "./components/Gemini"; // import Gemini
+import axios from "axios";
 
 function App() {
   const [domain, setDomain] = useState("");
   const [results, setResults] = useState({});
   const [loading, setLoading] = useState(false);
   const [headers, setHeaders] = useState(null);
+
+  const [geminiQuery, setGeminiQuery] = useState("");
+  const [geminiResponse, setGeminiResponse] = useState("");
+  const [showGemini, setShowGemini] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -42,16 +47,35 @@ function App() {
     }
   };
 
+  const handleExplain = (query) => {
+    setGeminiQuery(query);
+    setGeminiResponse(""); // Clear old response
+    setShowGemini(prev => !prev);   // Show Gemini only when user clicks Explain
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Website Security Analyzer</h1>
-        <DomainInput domain={domain} setDomain={setDomain} fetchAll={fetchAll} />
-        <ResultsSection 
-          results={results} 
-          loading={loading} 
-          headers={headers} 
-        />
+      <div className="flex h-full w-9/12 mx-auto">
+        {/* Left section with results, taking 65% of width */}
+        <div className="w-8/12 mr-4">
+          <h1 className="text-3xl font-bold mb-4">Website Security Analyzer</h1>
+          <DomainInput domain={domain} setDomain={setDomain} fetchAll={fetchAll} />
+
+          <ResultsSection
+            results={results}
+            loading={loading}
+            headers={headers}
+            onExplain={handleExplain} // Pass it down
+          />
+        </div>
+
+        {/* Right section for Gemini, taking 35% of width */}
+        {showGemini && (
+          <div className="w-4/12 bg-white p-4 rounded shadow h-fit fixed right-10">
+            <h2 className="text-xl font-semibold mb-2">Gemini's Explanation</h2>
+            <Gemini finalQuery={geminiQuery} setResponse={setGeminiResponse} domain={domain} />
+          </div>
+        )}
       </div>
     </div>
   );
