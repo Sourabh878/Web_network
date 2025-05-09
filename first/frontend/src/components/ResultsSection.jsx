@@ -14,6 +14,17 @@ const ResultsSection = ({ results, loading, headers, onExplain }) => {
     <div>
       {loading && <p className="mt-4">Loading...</p>}
 
+ {/* Display the image with same styling as IPInfo */}
+    <div className="mt-6 bg-white p-4 rounded shadow">
+        <h3 className="text-xl font-semibold mb-2">Website Screenshot</h3>
+        <img
+          src={`http://localhost:5000/screenshots/webImg.png?${new Date().getTime()}`} // Added timestamp for cache busting
+          alt="Website Screenshot"
+          className="w-full rounded-lg shadow-lg" // Styling for image
+        />
+      </div>
+
+
       {results.ipinfo && (
         <IPInfo ipinfo={results.ipinfo} onExplain={onExplain} />
       )}

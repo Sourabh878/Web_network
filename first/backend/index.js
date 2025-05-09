@@ -9,6 +9,9 @@ const http = require("http");
 const https = require("https");
 const { URL } = require("url");
 const puppeteer = require("puppeteer");
+const path = require("path");
+const fs = require('fs')
+
 
 // const { performance } = require("perf_hooks");
 // const fetch = require("node-fetch");
@@ -217,24 +220,105 @@ app.get("/api/malware", async (req, res) => {
 // });
 
 
+// app.get("/api/cookies", async (req, res) => {
+//   const urlParam = req.query.url;
+//   if (!urlParam) return res.status(400).json({ error: "URL is required" });
+
+//   const url = `https://${urlParam}`;
+//   console.log("url: ", url);
+
+//   try {
+//     const browser = await puppeteer.launch({
+//       headless: true,
+//       args: ['--no-sandbox', '--disable-setuid-sandbox']
+//     });
+
+//     const page = await browser.newPage();
+
+//     // Optional: Set user-agent to mimic a real browser
+//     await page.setUserAgent(
+//       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114 Safari/537.36"
+//     );
+
+//     // Try navigating with increased timeout
+//     await page.goto(url, {
+//       waitUntil: "networkidle2",
+//       timeout: 60000, // 60 seconds
+//     });
+
+//     const cookies = await page.cookies();
+
+//     const classifyCookie = (cookie) => {
+//       const name = cookie.name.toLowerCase();
+//       if (name.includes("session")) return "Session Cookie";
+//       if (name.includes("auth")) return "Authentication Cookie";
+//       if (name.includes("track") || cookie.domain.includes("google") || name.startsWith("_ga")) return "Tracking Cookie";
+//       return "Other";
+//     };
+
+//     const detailedCookies = cookies.map(c => ({
+//       name: c.name,
+//       domain: c.domain,
+//       secure: c.secure,
+//       httpOnly: c.httpOnly,
+//       sameSite: c.sameSite,
+//       expires: c.expires,
+//       type: classifyCookie(c),
+//     }));
+
+//     await browser.close();
+//     console.log("cookies: ", detailedCookies);
+
+//     res.json({ cookies: detailedCookies });
+//   } catch (err) {
+//     console.error("Cookie fetch error:", err.message);
+//     res.status(500).json({ error: "Failed to fetch cookies", message: err.message });
+//   }
+// });
+
+
+
 
 app.get("/api/cookies", async (req, res) => {
-  const url = "https://"+req.query.url;
+  const urlParam = req.query.url;
+  if (!urlParam) return res.status(400).json({ error: "URL is required" });
+
+  const url = `https://${urlParam}`;
   console.log("url: ", url);
-  
-  if (!url) return res.status(400).json({ error: "URL is required" });
 
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 15000 });
+    await page.setViewport({ width: 1366, height: 768 }); // Laptop-like view
+
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114 Safari/537.36"
+    );
+
+    await page.goto(url, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
+
+    // Save screenshot as webImg.png
+    const screenshotDir = path.join(__dirname, "screenshots");
+    await fs.promises.mkdir(screenshotDir, { recursive: true });
+
+    const filename = "webImg.png"; // Fixed filename
+    const screenshotPath = path.join(screenshotDir, filename);
+    await page.screenshot({ path: screenshotPath, fullPage: false });
 
     const cookies = await page.cookies();
 
     const classifyCookie = (cookie) => {
-      if (cookie.name.toLowerCase().includes("session")) return "Session Cookie";
-      if (cookie.name.toLowerCase().includes("auth")) return "Authentication Cookie";
-      if (cookie.name.toLowerCase().includes("track") || cookie.domain.includes("google") || cookie.name.startsWith("_ga")) return "Tracking Cookie";
+      const name = cookie.name.toLowerCase();
+      if (name.includes("session")) return "Session Cookie";
+      if (name.includes("auth")) return "Authentication Cookie";
+      if (name.includes("track") || cookie.domain.includes("google") || name.startsWith("_ga")) return "Tracking Cookie";
       return "Other";
     };
 
@@ -249,14 +333,20 @@ app.get("/api/cookies", async (req, res) => {
     }));
 
     await browser.close();
-    console.log("cookies: ", detailedCookies);
-    
-    res.json({ cookies: detailedCookies });
+
+    res.json({
+      cookies: detailedCookies,
+      screenshot: `/screenshots/${filename}`
+    });
   } catch (err) {
-    console.error("Cookie fetch error:", err);
-    res.status(500).json({ error: "Failed to fetch cookies" });
+    console.error("Cookie fetch error:", err.message);
+    res.status(500).json({ error: "Failed to fetch cookies or screenshot", message: err.message });
   }
 });
+
+
+app.use("/screenshots", express.static(path.join(__dirname, "screenshots")));
+
 
 
 
