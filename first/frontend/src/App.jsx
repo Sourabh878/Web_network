@@ -58,7 +58,7 @@ function App() {
       <div className="flex h-full w-9/12 mx-auto">
         {/* Left section with results, taking 65% of width */}
         <div className="w-8/12 mr-4">
-          <h1 className="text-3xl font-bold mb-4">Website Security Analyzer</h1>
+          <h1 className="text-3xl font-bold mb-4">Website's Network and Security Analyzer</h1>
           <DomainInput domain={domain} setDomain={setDomain} fetchAll={fetchAll} />
 
           <ResultsSection
